@@ -1,0 +1,52 @@
+name: Remove broken Arabic toggle
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/remove-arabic-toggle.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix-toggle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Remove Arabic toggle from index.html
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          # Remove the visible Arabic/English toggle button only.
+          text, count = re.subn(
+              r'<button onclick="toggleLang\(\)" class="px-3 py-1 rounded-full bg-gray-100 text-sm"><span id="langBtn">عربي</span></button>',
+              '',
+              text,
+              count=1,
+          )
+
+          # Keep the rest of the site unchanged. The unused toggleLang function is harmless.
+          path.write_text(text, encoding='utf-8')
+          print(f'Removed toggle buttons: {count}')
+          PY
+
+      - name: Commit fix
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "No change needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Remove broken Arabic translation toggle"
+          git push
