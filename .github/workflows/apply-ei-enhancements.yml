@@ -1,0 +1,91 @@
+name: Apply EI website enhancements
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-ei-enhancements.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  enhance:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enhance website
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+
+          # Footer with requested LinkedIn profiles
+          footer='''<footer class="fixed bottom-0 w-full bg-white border-t py-3 text-center text-sm text-gray-600 no-print"><div class="flex flex-wrap justify-center gap-x-6 gap-y-2 px-4"><span>EI Training • Skills for Success</span><a class="font-medium hover:text-[#0a66c2]" target="_blank" rel="noopener noreferrer" href="http://www.linkedin.com/in/hazem-al-amayreh-038aa1a4">LinkedIn: Hazem Amayreh</a><a class="font-medium hover:text-[#0a66c2]" target="_blank" rel="noopener noreferrer" href="https://www.linkedin.com/in/lynn-hourani-154001187/">LinkedIn: Lein Hourani</a></div></footer>'''
+          s=re.sub(r'<footer\b.*?</footer>',footer,s,count=1,flags=re.S)
+
+          # Reset / Retake control on each tab
+          reset_targets={'ei':'resetEI()','wheel':'resetWheel()','johari':'resetJohari()','styles':'resetStyles()','quiz':'resetQuiz()'}
+          for section,fn in reset_targets.items():
+              marker=f'<section id="{section}"'
+              pos=s.find(marker)
+              if pos<0: continue
+              end=s.find('>',pos)+1
+              nearby=s[end:end+350]
+              if 'Reset / Retake' not in nearby:
+                  btn=f'<div class="flex justify-end mb-4 no-print"><button onclick="{fn}" class="px-4 py-2 rounded-xl border border-gray-300 text-sm font-semibold text-gray-600 hover:border-[#00A88F] hover:text-[#00A88F]">↻ Reset / Retake</button></div>'
+                  s=s[:end]+btn+s[end:]
+
+          # Course section becomes expandable learning cards
+          course_section='''<section id="course" class="panel hidden fade"><div class="flex items-start justify-between gap-4 mb-6"><div><h2 class="text-3xl font-bold text-[#1B2A4A]">Course Material</h2><p class="text-gray-600 mt-2 max-w-2xl">Open a topic to review the idea, see a student example, answer a quick poll, and leave with one practical takeaway.</p></div><button onclick="resetCourse()" class="no-print shrink-0 px-4 py-2 rounded-xl border border-gray-300 text-sm font-semibold text-gray-600 hover:border-[#00A88F] hover:text-[#00A88F]">↻ Reset</button></div><div class="space-y-4" id="courseCards"></div></section>'''
+          s=re.sub(r'<section id="course"\b.*?</section>',course_section,s,count=1,flags=re.S)
+
+          # Replace simple course cards with detailed expandable modules.
+          course_js=r'''const modules=[
+          {title:'Multiple Intelligences',summary:'Success is not one-dimensional. Technical knowledge matters, but self-management, relationship skills and adaptability strongly influence performance.',details:'University success uses more than academic intelligence. You may be strong in analysis yet still need communication, self-awareness, creativity or relationship skills to turn knowledge into impact.',example:'A student understands the technical part of a research project but struggles to listen, divide work or respond to feedback. Knowledge alone does not solve the team problem.',poll:'Which skill would most improve this student’s team performance?',options:['Memorizing more facts','Listening, adapting and communicating','Working alone'],correct:1,takeaway:'Your degree builds expertise; how you manage yourself and work with people helps convert expertise into results.'},
+          {title:'Fact vs. Story',summary:'Separate observable facts from the interpretation or story your mind creates.',details:'A fact is what a camera could record. A story is the meaning, assumption or intention your mind adds. Emotional reactions often become stronger because we react to the story as if it were proven fact.',example:'Your teammate reads your message and does not reply for six hours. Fact: there is no reply yet. Story: “They do not respect me.” That story may be true—or completely wrong.',poll:'A professor writes “See me after class.” Which option is a STORY?',options:['The professor asked to see me','I am definitely in trouble','The message is short'],correct:1,takeaway:'Before reacting, ask: What do I know for sure? What am I adding?'},
+          {title:'The Dangerous Sequence',summary:'Trigger → Emotion → Reaction. Insert a deliberate pause before responding.',details:'Triggers can activate emotion quickly. When reaction follows automatically, we may send the message, raise our voice or make the decision before our thinking catches up. The pause creates a choice point.',example:'Someone criticizes your idea during a group project. You feel attacked. Instead of replying immediately, you pause, ask what specifically concerns them, and respond to the issue rather than the emotion.',poll:'Where is the best place to interrupt the dangerous sequence?',options:['Before any trigger exists','Between emotion and reaction','After the conflict is over'],correct:1,takeaway:'Pause is not passivity. A few seconds can protect the quality of your response.'},
+          {title:'Toxic vs. Magnetic',summary:'Your emotional energy affects others. Magnetic behaviors help people feel valued, respected and capable.',details:'People remember how interaction with you feels. Toxic behaviors drain confidence through blame, dismissal or constant negativity. Magnetic behaviors raise the quality of the room through respect, curiosity, encouragement and accountability.',example:'Two students face the same deadline. One complains and blames everyone. The other names the problem, asks what is needed and recognizes effort. Both influence the team climate.',poll:'Which behavior is most magnetic?',options:['Taking credit for the best idea','Making others feel valued and capable','Avoiding all disagreement'],correct:1,takeaway:'Your emotional impact is part of your leadership even when you do not have a formal title.'},
+          {title:'Covey & Carnegie',summary:'Trust grows through small commitments, attention, listening, gratitude and genuine interest in others.',details:'Relationship credit is built through repeated deposits: keeping promises, listening, showing respect and giving sincere appreciation. Withdrawals include broken commitments, disrespect, ignoring people or only contacting them when you need something.',example:'A classmate promises to send their part by 7 PM and does it. That small act adds trust. Repeated missed deadlines make future cooperation harder.',poll:'Which action is a relationship deposit?',options:['Keeping a small promise','Winning every argument','Only helping when people can see it'],correct:0,takeaway:'Trust is usually built through small repeated behaviors, not one dramatic gesture.'},
+          {title:'Social Styles',summary:'Driver, Expressive, Amiable and Analytical styles need different communication approaches.',details:'Different styles pay attention to different things. Drivers value speed and results. Expressives value energy and possibilities. Amiables value trust and inclusion. Analyticals value evidence and processing time. Adaptation makes the same message easier to receive.',example:'You need approval for a student event. A Driver may want the decision and deadline. An Analytical may first ask for data, risks and details. Giving both the exact same pitch may reduce your influence.',poll:'You need an Analytical teammate to approve your proposal. What is the best approach?',options:['Give facts and time to review','Push for an immediate decision','Use only an exciting story'],correct:0,takeaway:'Adaptation is not being fake. It is communicating in a way the other person can process.'}
+          ];
+          function answerCoursePoll(btn,moduleIndex,choice){
+            const m=modules[moduleIndex],box=btn.closest('.course-poll'),feedback=box.querySelector('.course-feedback');
+            box.querySelectorAll('button').forEach(b=>b.disabled=true);
+            const ok=choice===m.correct;
+            btn.classList.add(ok?'border-green-500':'border-red-400',ok?'bg-green-50':'bg-red-50');
+            feedback.classList.remove('hidden');
+            feedback.innerHTML=ok?'<span class="font-semibold text-green-700">Correct.</span> Now connect it to one situation you face at university.':'<span class="font-semibold text-red-700">Not quite.</span> Review the example and try to identify the behavior the concept is encouraging.';
+          }
+          function renderCourseCards(){
+            const c=$('courseCards'); if(!c)return;
+            c.innerHTML=modules.map((m,i)=>`<details class="group bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden"><summary class="cursor-pointer list-none p-5 md:p-6 flex items-center justify-between gap-4"><div><div class="text-xs uppercase tracking-wider font-bold text-[#00A88F] mb-1">Module ${i+1}</div><h3 class="font-bold text-xl text-[#1B2A4A]">${m.title}</h3><p class="text-gray-500 mt-1 text-sm">${m.summary}</p></div><span class="text-2xl text-gray-400 group-open:rotate-45 transition-transform">+</span></summary><div class="border-t border-gray-100 p-5 md:p-7 space-y-5"><div><h4 class="font-bold text-[#1B2A4A] mb-2">What it means</h4><p class="text-gray-700">${m.details}</p></div><div class="bg-slate-50 rounded-xl p-5"><h4 class="font-bold text-[#1B2A4A] mb-2">Student Example</h4><p class="text-gray-700">${m.example}</p></div><div class="course-poll bg-blue-50 border border-blue-100 rounded-xl p-5"><h4 class="font-bold text-blue-900 mb-2">Quick Poll</h4><p class="text-blue-900 mb-3">${m.poll}</p><div class="grid gap-2">${m.options.map((o,j)=>`<button onclick="answerCoursePoll(this,${i},${j})" class="text-left bg-white border border-blue-200 px-4 py-3 rounded-lg hover:border-[#00A88F]">${o}</button>`).join('')}</div><div class="course-feedback hidden text-sm mt-3"></div></div><div class="bg-[#E5F6F4] border-l-4 border-[#00A88F] rounded-r-xl p-5"><h4 class="font-bold text-[#1B2A4A] mb-1">Takeaway</h4><p>${m.takeaway}</p></div></div></details>`).join('');
+          }
+          renderCourseCards();'''
+          s=re.sub(r"const modules=\[.*?\];\$\('courseCards'\)\.innerHTML=modules\.map\(.*?\.join\(''\);",course_js,s,count=1,flags=re.S)
+
+          # Add clean reset functions before the final script close.
+          reset_js=r'''
+          function resetEI(){eiI=0;eiA=[];$('eiIntro').classList.remove('hidden');$('eiQ').classList.add('hidden');$('eiResult').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'});}
+          function resetWheel(){wI=0;w=[];if(window.lifeChart){window.lifeChart.destroy();window.lifeChart=null}$('wheelIntro').classList.remove('hidden');$('wheelQ').classList.add('hidden');$('wheelResult').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'});}
+          function resetJohari(){jt=[];ja='self';ji=0;jr={self:{},c1:{},c2:{}};const inp=$('customTrait');if(inp)inp.value='';$('jIntro').classList.remove('hidden');$('jQ').classList.add('hidden');$('jResult').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'});}
+          function resetStyles(){si=0;ss={D:0,E:0,Am:0,A:0};$('sIntro').classList.remove('hidden');$('sQ').classList.add('hidden');$('sResult').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'});}
+          function resetQuiz(){qi=0;qs=0;qwrong=[];$('qIntro').classList.remove('hidden');$('qBox').classList.add('hidden');$('qResult').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'});}
+          function resetCourse(){document.querySelectorAll('#courseCards details').forEach(d=>d.open=false);renderCourseCards();window.scrollTo({top:0,behavior:'smooth'});}
+          '''
+          if 'function resetEI()' not in s:
+              s=s.replace('</script>',reset_js+'\n</script>',1)
+
+          p.write_text(s,encoding='utf-8')
+          PY
+
+          rm -f .github/workflows/apply-ei-enhancements.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/apply-ei-enhancements.yml
+          git commit -m "Enhance course material, resets, and footer"
+          git push
