@@ -1,2 +1,2 @@
-# EI
+# Effectives Survey 
 Emotional Intelligence 
