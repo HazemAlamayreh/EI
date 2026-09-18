@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#071f4d">
+<title>Negotiation Prep Lab</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <div class="accent"></div>
+  <header>
+    <div class="hrow"><div class="brand">Negotiation Prep Lab</div><div id="stepPill" class="pill"></div></div>
+    <div class="progress"><span id="progressBar"></span></div>
+  </header>
+  <main>
+    <div class="hero"><div id="kicker" class="kicker"></div><h1 id="hero"></h1><p id="subtitle" class="sub"></p></div>
+    <div class="tabs">
+      <button id="learnTab" onclick="setSub('learn')">Learn<br><span>تعلّم</span></button>
+      <button id="activityTab" onclick="setSub('activity')">Activity<br><span>نشاط</span></button>
+      <button id="quizTab" onclick="setSub('quiz')">Quiz<br><span>اختبار</span></button>
+    </div>
+    <div id="screen"></div>
+  </main>
+  <div class="bottom">
+    <div class="brow"><button class="btn secondary" onclick="back()">Back • رجوع</button><button id="nextBtn" class="btn primary" onclick="next()">Next • التالي</button></div>
+    <div class="mini">Answers are saved on this device only • يتم حفظ الإجابات على هذا الجهاز فقط</div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
