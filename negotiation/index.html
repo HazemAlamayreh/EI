@@ -16,16 +16,17 @@
   </header>
   <main>
     <div class="hero"><div id="kicker" class="kicker"></div><h1 id="hero"></h1><p id="subtitle" class="sub"></p></div>
+    <div id="elementTabs" class="element-tabs" aria-label="Negotiation elements"></div>
     <div class="tabs">
-      <button id="learnTab" onclick="setSub('learn')">Learn<br><span>تعلّم</span></button>
-      <button id="activityTab" onclick="setSub('activity')">Activity<br><span>نشاط</span></button>
+      <button id="learnTab" onclick="setSub('learn')">Summary<br><span>ملخص</span></button>
       <button id="quizTab" onclick="setSub('quiz')">Quiz<br><span>اختبار</span></button>
+      <button id="activityTab" onclick="setSub('activity')">Case<br><span>الحالة</span></button>
     </div>
     <div id="screen"></div>
   </main>
   <div class="bottom">
     <div class="brow"><button class="btn secondary" onclick="back()">Back • رجوع</button><button id="nextBtn" class="btn primary" onclick="next()">Next • التالي</button></div>
-    <div class="mini">Answers are saved on this device only • يتم حفظ الإجابات على هذا الجهاز فقط</div>
+    <div class="mini">Open navigation • Answers are saved on this device only</div>
   </div>
 </div>
 <script src="app.js"></script>
